@@ -1,4 +1,5 @@
 require 'optparse'
+require 'time'
 require_relative 'misskey'
 
 opt = OptionParser.new
@@ -33,21 +34,25 @@ options.each do |key, value|
   case key
   when :my_notes
     user_id = misskey.i['id']
-    notes = misskey.my_notes(user_id, limit: 20)
+    notes = misskey.my_notes(user_id, limit: 10)
     notes.reverse_each do |note|
       id_str = "id: #{note['id']}"
-      id_str += "(reply_id: #{note['replyId']})" if note['replyId']
-      puts id_str
+      id_str += " (reply: #{note['replyId']})" if note['replyId']
+      time = Time.parse(note['createdAt'])
+      title = [id_str, "[#{time.strftime("%Y-%m-%d %H:%M:%S")}]"].join(' ')
+      puts title
       puts note['text']
       puts ''
     end
   when :hometimeline
     notes = misskey.timeline
     notes.reverse_each do |note|
-      puts "user: #{note['userId']}"
       id_str = "id: #{note['id']}"
-      id_str += "(reply_id: #{note['replyId']})" if note['replyId']
-      puts id_str
+      id_str += " (reply: #{note['replyId']})" if note['replyId']
+      time = Time.parse(note['createdAt'])
+      title = [id_str, "[#{time.strftime("%Y-%m-%d %H:%M:%S")}]"].join(' ')
+      puts title
+      puts "user: #{note.dig('user', 'name')}(id: #{note.dig('user', 'id')})"
       puts note['text']
       puts ''
     end
