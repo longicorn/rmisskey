@@ -74,6 +74,7 @@ class Misskey
       header
     )
     status = res.is_a?(Net::HTTPSuccess)
+    raise 'Bad Gateway' if res.code == '502'
     return status, res
   end
 end
