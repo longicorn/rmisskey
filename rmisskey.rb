@@ -33,11 +33,26 @@ options.each do |key, value|
   case key
   when :my_notes
     user_id = misskey.i['id']
-    p misskey.my_notes(user_id)
+    notes = misskey.my_notes(user_id, limit: 20)
+    notes.reverse_each do |note|
+      id_str = "id: #{note['id']}"
+      id_str += "(reply_id: #{note['replyId']})" if note['replyId']
+      puts id_str
+      puts note['text']
+      puts ''
+    end
   when :hometimeline
-    p misskey.timeline
+    notes = misskey.timeline
+    notes.reverse_each do |note|
+      puts "user: #{note['userId']}"
+      id_str = "id: #{note['id']}"
+      id_str += "(reply_id: #{note['replyId']})" if note['replyId']
+      puts id_str
+      puts note['text']
+      puts ''
+    end
   when :info
-    p misskey.i
+    pp misskey.i
   when :post, :reply
     if options[:file].nil?
       $stderr.puts opt.help
