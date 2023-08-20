@@ -1,3 +1,8 @@
+require 'net/http'
+require 'uri'
+require 'cgi'
+require 'json'
+
 class Misskey
   def initialize(url, token)
     @top_url = url

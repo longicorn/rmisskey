@@ -1,9 +1,4 @@
-require 'net/http'
-require 'uri'
-require 'cgi'
-require 'json'
 require 'optparse'
-
 require_relative 'misskey'
 
 opt = OptionParser.new
