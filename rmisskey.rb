@@ -4,43 +4,22 @@ require 'cgi'
 require 'json'
 require 'optparse'
 
-class Misskey
-  def initialize(url, token)
-    @top_url = url
-    @token = token
-  end
-
-  def post(text)
-    api_url = "#{@top_url}/api"
-    url = "#{api_url}/notes/create"
-    uri = URI.parse(url)
-    uri = URI(uri)
-
-    header = {'Content-Type': 'application/json'}
-    params = {i: @token, text: text}
-
-    res = Net::HTTP.post(uri,
-      params.to_json,
-      header
-    )
-    if res.is_a?(Net::HTTPSuccess)
-      return true
-    else
-      $stderr.puts "Post failed: #{res.code}"
-      return false
-    end
-  end
-end
+require_relative 'misskey'
 
 opt = OptionParser.new
 options = {}
+opt.on('-i', '--info') {options[:info] = true }
+opt.on('-p', '--post') {options[:post] = true }
+opt.on('-r', '--reply NoteID') {|v| options[:reply] = true; options[:reply_id] = v }
 opt.on('-f', '--file FILE', String) {|v| options[:file] = v }
+opt.on('-t', '--hometimeline') {|v| options[:hometimeline] = true }
+opt.on('-m', '--mynotes') {|v| options[:my_notes] = true }
 opt.parse!(ARGV)
-unless options.dig(:file)
+
+if options.empty?
   $stderr.puts opt.help
   exit 1
 end
-
 
 url = ENV['MISSKEY_URL']
 if url.nil? || url.empty?
@@ -54,5 +33,34 @@ if token.nil? || token.empty?
 end
 
 misskey = Misskey.new(url, token)
-text = File.read(options[:file]).chomp
-misskey.post(text)
+
+options.each do |key, value|
+  case key
+  when :test
+    p misskey.test
+  when :my_notes
+    user_id = misskey.i['id']
+    p misskey.my_notes(user_id)
+  when :hometimeline
+    p misskey.timeline
+  when :info
+    p misskey.i
+  when :post, :reply
+    if options[:file].nil?
+      $stderr.puts opt.help
+      exit 1
+    end
+
+    if options[:file].size <= 0
+      $stderr.puts opt.help
+      exit 1
+    end
+    text = File.read(options[:file]).chomp
+
+    if options[:reply]
+      misskey.note_create(text, reply_id: options[:reply_id])
+    else
+      misskey.note_create(text)
+    end
+  end
+end
