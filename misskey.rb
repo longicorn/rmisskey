@@ -29,10 +29,11 @@ class Misskey
     end
   end
 
-  def my_notes(user_id, limit=10)
-    status, res = api('notes/timeline', {limit: 100})
+  def my_notes(user_id, limit: 10)
+    params = {userId: user_id, includeMyRenotes: false, limit: limit}
+    status, res = api('users/notes', params)
     if status
-      return JSON.load(res.body).filter{|v| v['userId']==user_id }[0...limit]
+      return JSON.load(res.body)
     else
       return false
     end
