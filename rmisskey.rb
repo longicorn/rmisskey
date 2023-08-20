@@ -31,8 +31,6 @@ misskey = Misskey.new(url, token)
 
 options.each do |key, value|
   case key
-  when :test
-    p misskey.test
   when :my_notes
     user_id = misskey.i['id']
     p misskey.my_notes(user_id)
