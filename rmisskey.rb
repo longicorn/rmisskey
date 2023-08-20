@@ -7,7 +7,7 @@ opt.on('-i', '--info') {options[:info] = true }
 opt.on('-p', '--post') {options[:post] = true }
 opt.on('-r', '--reply NoteID') {|v| options[:reply] = true; options[:reply_id] = v }
 opt.on('-f', '--file FILE', String) {|v| options[:file] = v }
-opt.on('-t', '--hometimeline') {|v| options[:hometimeline] = true }
+opt.on('-t', '--timeline') {|v| options[:hometimeline] = true }
 opt.on('-m', '--mynotes') {|v| options[:my_notes] = true }
 opt.parse!(ARGV)
 
