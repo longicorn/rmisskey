@@ -9,6 +9,11 @@ class Misskey
     @token = token
   end
 
+  def inspect
+    # not show token
+    "#<Misskey:0x#{object_id.to_s(16)} @top_url=\"#{@top_url}\">"
+  end
+
   # my info
   def i
     status, res = api('i')
