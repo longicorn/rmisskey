@@ -35,7 +35,7 @@ class Misskey
   end
 
   def my_notes(user_id, limit: 10)
-    params = {userId: user_id, includeMyRenotes: false, limit: limit}
+    params = {userId: user_id, includeMyRenotes: true, limit: limit}
     status, res = api('users/notes', params)
     if status
       return JSON.load(res.body)

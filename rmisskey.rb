@@ -6,7 +6,7 @@ opt = OptionParser.new
 options = {}
 opt.on('-i', '--info') {options[:info] = true }
 opt.on('-p', '--post') {options[:post] = true }
-opt.on('-r', '--reply NoteID') {|v| options[:reply] = true; options[:reply_id] = v }
+opt.on('-r', '--reply NoteID', String) {|v| options[:reply] = true; options[:reply_id] = v }
 opt.on('-f', '--file FILE', String) {|v| options[:file] = v }
 opt.on('-t', '--timeline') {|v| options[:hometimeline] = true }
 opt.on('-m', '--mynotes') {|v| options[:my_notes] = true }
@@ -28,6 +28,35 @@ if token.nil? || token.empty?
   exit 1
 end
 
+def format_note_headder(note, include_user: false)
+  id_str = "id: #{note['id']}"
+  id_str += " (reply: #{note['replyId']})" if note['replyId']
+  time = Time.parse(note['createdAt'])
+
+  user_str = nil
+  user_str = "user: #{note.dig('user', 'name')}(id: #{note.dig('user', 'id')})" if include_user
+  title = [id_str, "[#{time.strftime("%Y-%m-%d %H:%M:%S")}]"].join(' ')
+
+  [title, user_str].compact.join("\n")
+end
+
+def format_note_body(note)
+  if note['renote']
+    hash = format_note(note['renote'])
+    [ "  #{hash[:headder]}", "  #{hash[:body].gsub(/\n/, "\n  ")}"].join("\n")
+  else
+    note['text']
+  end
+end
+
+def format_note(note, include_user: false)
+  hash = {}
+  hash[:headder] = format_note_headder(note, include_user: include_user)
+  hash[:body] = format_note_body(note)
+
+  hash
+end
+
 misskey = Misskey.new(url, token)
 
 options.each do |key, value|
@@ -36,24 +65,17 @@ options.each do |key, value|
     user_id = misskey.i['id']
     notes = misskey.my_notes(user_id, limit: 10)
     notes.reverse_each do |note|
-      id_str = "id: #{note['id']}"
-      id_str += " (reply: #{note['replyId']})" if note['replyId']
-      time = Time.parse(note['createdAt'])
-      title = [id_str, "[#{time.strftime("%Y-%m-%d %H:%M:%S")}]"].join(' ')
-      puts title
-      puts note['text']
+      hash = format_note(note)
+      puts hash[:headder]
+      puts hash[:body]
       puts ''
     end
   when :hometimeline
     notes = misskey.timeline
     notes.reverse_each do |note|
-      id_str = "id: #{note['id']}"
-      id_str += " (reply: #{note['replyId']})" if note['replyId']
-      time = Time.parse(note['createdAt'])
-      title = [id_str, "[#{time.strftime("%Y-%m-%d %H:%M:%S")}]"].join(' ')
-      puts title
-      puts "user: #{note.dig('user', 'name')}(id: #{note.dig('user', 'id')})"
-      puts note['text']
+      hash = format_note(note, include_user: true)
+      puts hash[:headder]
+      puts hash[:body]
       puts ''
     end
   when :info
