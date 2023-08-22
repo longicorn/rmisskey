@@ -25,7 +25,7 @@ class Misskey
   end
 
   # home timeline
-  def timeline(limit=10)
+  def timeline(limit: 10)
     status, res = api('notes/timeline', {limit: limit})
     if status
       JSON.load(res.body)

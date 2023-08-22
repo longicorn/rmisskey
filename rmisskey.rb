@@ -35,17 +35,29 @@ def format_note_headder(note, include_user: false)
 
   user_str = nil
   user_str = "user: #{note.dig('user', 'name')}(id: #{note.dig('user', 'id')})" if include_user
+
+  if note['reactions'].size > 0
+    reactions = note['reactions'].map{|k,v|"#{k}(#{v})"}.join(', ')
+    reactions = "reactions: #{reactions}" if reactions.size > 0
+  end
+
   title = [id_str, "[#{time.strftime("%Y-%m-%d %H:%M:%S")}]"].join(' ')
 
-  [title, user_str].compact.join("\n")
+  [title, reactions, user_str].compact.join("\n")
 end
 
 def format_note_body(note)
   if note['renote']
     hash = format_note(note['renote'])
-    [ "  #{hash[:headder]}", "  #{hash[:body].gsub(/\n/, "\n  ")}"].join("\n")
+    ary = []
+    ary << "  #{hash[:headder].gsub(/\n/, "\n  ")}"
+    ary << "  #{hash[:body].gsub(/\n/, "\n  ")}" if hash[:body]
+    ary.join("\n")
   else
-    note['text']
+    ary = []
+    ary << note['text'].gsub(/\n\n/, "\n#{[0x23CE].pack( "U*" )}\n").chomp if note['text']
+    ary << note['files'].map{|v|v['thumbnailUrl']} if note['files']
+    ary.flatten.join("\n")
   end
 end
 
