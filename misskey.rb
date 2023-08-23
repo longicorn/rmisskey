@@ -3,9 +3,12 @@ require 'uri'
 require 'cgi'
 require 'json'
 
+require_relative 'mcache'
+
 class Misskey
-  def initialize(url, token)
+  def initialize(url, username, token)
     @top_url = url
+    @username = username
     @token = token
   end
 
@@ -16,12 +19,15 @@ class Misskey
 
   # my info
   def i
-    status, res = api('i')
-    if status
-      JSON.load(res.body)
-    else
-      res.code
+    json = Mcache.cache("user", @username, timeout: 24*60*60) do
+      status, res = api('i')
+      if status
+        res.body
+      else
+        return nil
+      end
     end
+    JSON.load(json)
   end
 
   # home timeline

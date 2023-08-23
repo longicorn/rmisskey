@@ -17,15 +17,13 @@ if options.empty?
   exit 1
 end
 
-url = ENV['MISSKEY_URL']
-if url.nil? || url.empty?
-  $stderr.puts 'MISSKEY_URL is not set'
-  exit 1
-end
-token = ENV['MISSKEY_TOKEN']
-if token.nil? || token.empty?
-  $stderr.puts 'MISSKEY_TOKEN is not set'
-  exit 1
+#check ENV
+['MISSKEY_URL', 'MISSKEY_USERNAME', 'MISSKEY_TOKEN'].each do |env_name|
+  env = ENV[env_name]
+  if env.nil? || env.empty?
+    $stderr.puts "#{env_name} is not set"
+    exit 1
+  end
 end
 
 def format_note_headder(note, include_user: false)
@@ -69,7 +67,7 @@ def format_note(note, include_user: false)
   hash
 end
 
-misskey = Misskey.new(url, token)
+misskey = Misskey.new(ENV['MISSKEY_URL'], ENV['MISSKEY_USERNAME'], ENV['MISSKEY_TOKEN'])
 
 options.each do |key, value|
   case key
