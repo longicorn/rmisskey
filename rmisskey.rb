@@ -90,7 +90,7 @@ options.each do |key, value|
     end
   when :info
     pp misskey.i
-  when :post, :reply
+  when :post
     text = ''
 
     # get text
