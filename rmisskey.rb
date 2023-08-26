@@ -29,7 +29,7 @@ end
 def format_note_headder(note, include_user: false)
   id_str = "id: #{note['id']}"
   id_str += " (reply: #{note['replyId']})" if note['replyId']
-  time = Time.parse(note['createdAt'])
+  time = Time.parse(note['createdAt']).localtime
 
   user_str = nil
   user_str = "user: #{note.dig('user', 'name')}(id: #{note.dig('user', 'id')})" if include_user
