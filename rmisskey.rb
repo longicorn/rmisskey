@@ -67,59 +67,62 @@ def format_note(note, include_user: false)
   hash
 end
 
-misskey = Misskey.new(ENV['MISSKEY_URL'], ENV['MISSKEY_USERNAME'], ENV['MISSKEY_TOKEN'])
-
-options.each do |key, value|
-  case key
-  when :my_notes
-    user_id = misskey.i['id']
-    notes = misskey.my_notes(user_id, limit: 10)
-    notes.reverse_each do |note|
-      hash = format_note(note)
-      puts hash[:headder]
-      puts hash[:body]
-      puts ''
-    end
-  when :hometimeline
-    notes = misskey.timeline
-    notes.reverse_each do |note|
-      hash = format_note(note, include_user: true)
-      puts hash[:headder]
-      puts hash[:body]
-      puts ''
-    end
-  when :info
-    pp misskey.i
-  when :post
-    text = ''
-
-    # get text
-    if options[:file].nil?
-      if ARGV.empty?
-        rs, _ = IO.select([$stdin], [], [], 0.1)
-        exit if rs.nil?
-        text = $stdin.gets if rs
-      else
-        text = ARGV.shift
+def execute(misskey, options)
+  options.each do |key, value|
+    case key
+    when :my_notes
+      user_id = misskey.i['id']
+      notes = misskey.my_notes(user_id, limit: 10)
+      notes.reverse_each do |note|
+        hash = format_note(note)
+        puts hash[:headder]
+        puts hash[:body]
+        puts ''
       end
-    else
-      text = File.read(options[:file])
-    end
-    if text.size <= 0
-      $stderr.puts opt.help
-      exit 1
-    end
-    text = text.chomp
+    when :hometimeline
+      notes = misskey.timeline
+      notes.reverse_each do |note|
+        hash = format_note(note, include_user: true)
+        puts hash[:headder]
+        puts hash[:body]
+        puts ''
+      end
+    when :info
+      pp misskey.i
+    when :post
+      text = ''
 
-    ret = nil
-    if options[:reply]
-      ret = misskey.note_create(text, reply_id: options[:reply_id])
-    else
-      ret = misskey.note_create(text)
-    end
-    unless ret
-      puts 'Post failed'
-      exit 1
+      # get text
+      if options[:file].nil?
+        if ARGV.empty?
+          rs, _ = IO.select([$stdin], [], [], 0.1)
+          exit if rs.nil?
+          text = $stdin.gets if rs
+        else
+          text = ARGV.shift
+        end
+      else
+        text = File.read(options[:file])
+      end
+      if text.size <= 0
+        $stderr.puts opt.help
+        exit 1
+      end
+      text = text.chomp
+
+      ret = nil
+      if options[:reply]
+        ret = misskey.note_create(text, reply_id: options[:reply_id])
+      else
+        ret = misskey.note_create(text)
+      end
+      unless ret
+        puts 'Post failed'
+        exit 1
+      end
     end
   end
 end
+
+misskey = Misskey.new(ENV['MISSKEY_URL'], ENV['MISSKEY_USERNAME'], ENV['MISSKEY_TOKEN'])
+execute(misskey, options)
