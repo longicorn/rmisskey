@@ -19,7 +19,7 @@ class Misskey
 
   # my info
   def i
-    Mcache.cache("user", @username, timeout: 24*60*60) do
+    Mcache.cache('user', @username, timeout: 24*60*60) do
       status, res = api('i')
       if status
         res
@@ -40,10 +40,15 @@ class Misskey
   end
 
   def my_notes(user_id, limit: 10)
-    params = {userId: user_id, includeMyRenotes: true, limit: limit.to_i}
+    key = "notes/#{@username}"
+    cache_notes = Mcache.read(key, 'notes') || []
+
+    params = {userId: user_id, sinceId: cache_notes.first&.dig('id'), includeMyRenotes: true, limit: limit.to_i}
     status, res = api('users/notes', params)
     if status
-      res
+      cache_notes = res + cache_notes
+      Mcache.write(key, 'notes', cache_notes)
+      cache_notes
     else
       false
     end
@@ -53,6 +58,10 @@ class Misskey
     params = {text: text, replyId: reply_id, visibility: visibility, visibleUserIds: visible_user_ids}
     status, res = api('notes/create', params)
     if status
+      key = "notes/#{@username}"
+      cache_notes = Mcache.read(key, 'notes') || []
+      cache_notes = [res['createdNote']] + cache_notes
+      Mcache.write(key, 'notes', cache_notes)
       return res
     else
       $stderr.puts "Post failed: #{res.code}"
