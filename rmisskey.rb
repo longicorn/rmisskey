@@ -10,6 +10,7 @@ opt.on('-r', '--reply NoteID', String) {|v| options[:reply] = true; options[:rep
 opt.on('-f', '--file FILE', String) {|v| options[:file] = v }
 opt.on('-t', '--timeline') {|v| options[:hometimeline] = true }
 opt.on('-m', '--mynotes') {|v| options[:my_notes] = true }
+opt.on('-n', '--num NUM', String) {|v| options[:num] = v }
 opt.parse!(ARGV)
 
 if options.empty?
@@ -72,21 +73,23 @@ def execute(misskey, options)
     case key
     when :my_notes
       user_id = misskey.i['id']
-      notes = misskey.my_notes(user_id, limit: 10)
+      limit = options[:num] || 10
+      notes = misskey.my_notes(user_id, limit: limit)
       notes.reverse_each do |note|
         hash = format_note(note)
         puts hash[:headder]
         puts hash[:body]
         puts ''
-      end
+      end if notes.is_a?(Array)
     when :hometimeline
-      notes = misskey.timeline
+      limit = options[:num] || 10
+      notes = misskey.timeline(limit: limit)
       notes.reverse_each do |note|
         hash = format_note(note, include_user: true)
         puts hash[:headder]
         puts hash[:body]
         puts ''
-      end
+      end if notes.is_a?(Array)
     when :info
       pp misskey.i
     when :post

@@ -32,7 +32,7 @@ class Misskey
 
   # home timeline
   def timeline(limit: 10)
-    status, res = api('notes/timeline', {limit: limit})
+    status, res = api('notes/timeline', {limit: limit.to_i})
     if status
       JSON.load(res.body)
     else
@@ -41,7 +41,7 @@ class Misskey
   end
 
   def my_notes(user_id, limit: 10)
-    params = {userId: user_id, includeMyRenotes: true, limit: limit}
+    params = {userId: user_id, includeMyRenotes: true, limit: limit.to_i}
     status, res = api('users/notes', params)
     if status
       return JSON.load(res.body)
