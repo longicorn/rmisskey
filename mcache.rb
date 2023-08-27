@@ -3,19 +3,20 @@ require 'fileutils'
 
 class Mcache
   class << self
-    def cache(type, key, timeout: nil)
+    def cache(type, key, timeout: nil, force: false)
       if block_given?
         path = send("#{type}_path", key)
-        if path && File.exist?(path)
+        File.delete(path) if force
+        if path && File.exist?(path) && !force
           s = File::Stat.new(path)
-          return File.read(path) if Time.now <= s.mtime + timeout
+          return JSON.load(File.read(path)) if Time.now <= s.mtime + timeout
           # delete timeout cache
           File.delete(path)
         end
 
         data = yield
         File.open(path, 'w') do |f|
-          f.write(data)
+          f.write(data.to_json)
         end if path && data
 
         return data

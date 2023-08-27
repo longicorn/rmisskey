@@ -19,22 +19,21 @@ class Misskey
 
   # my info
   def i
-    json = Mcache.cache("user", @username, timeout: 24*60*60) do
+    Mcache.cache("user", @username, timeout: 24*60*60) do
       status, res = api('i')
       if status
-        res.body
+        res
       else
-        return nil
+        nil
       end
     end
-    JSON.load(json)
   end
 
   # home timeline
   def timeline(limit: 10)
     status, res = api('notes/timeline', {limit: limit.to_i})
     if status
-      JSON.load(res.body)
+      res
     else
       res.code
     end
@@ -44,30 +43,29 @@ class Misskey
     params = {userId: user_id, includeMyRenotes: true, limit: limit.to_i}
     status, res = api('users/notes', params)
     if status
-      return JSON.load(res.body)
+      res
     else
-      return false
+      false
     end
   end
 
   def note_create(text, reply_id: nil)
-    params = {text: text}
-    params = {text: text, replyId: reply_id} if reply_id
+    params = {text: text, replyId: reply_id}
     status, res = api('notes/create', params)
     if status
-      return true
+      return res
     else
       $stderr.puts "Post failed: #{res.code}"
-      return false
+      false
     end
   end
 
   def note_show(note_id)
     status, res = api('notes/show', {noteId: note_id})
     if status
-      return JSON.load(res.body)
+      res
     else
-      return false
+      false
     end
   end
 
@@ -78,6 +76,7 @@ class Misskey
     uri = URI(uri)
 
     header = {'Content-Type': 'application/json'}
+    params = params.delete_if {|k, v| v.nil? || v == ''}
     params = {i: @token}.merge(params)
 
     res = Net::HTTP.post(uri,
@@ -86,6 +85,6 @@ class Misskey
     )
     status = res.is_a?(Net::HTTPSuccess)
     raise 'Bad Gateway' if res.code == '502'
-    return status, res
+    return status, JSON.load(res.body)
   end
 end
