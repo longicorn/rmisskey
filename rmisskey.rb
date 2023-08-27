@@ -129,6 +129,11 @@ def execute(misskey, options)
         puts 'Post failed'
         exit 1
       end
+
+      puts 'Post success'
+      puts ''
+      puts "id: #{ret['createdNote']['id']}"
+      puts "#{ret['createdNote']['text']}"
     end
   end
 end
