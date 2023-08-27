@@ -4,24 +4,44 @@ require 'fileutils'
 class Mcache
   class << self
     def cache(type, key, timeout: nil, force: false)
-      if block_given?
-        path = send("#{type}_path", key)
-        File.delete(path) if force
-        if path && File.exist?(path) && !force
-          s = File::Stat.new(path)
-          return JSON.load(File.read(path)) if Time.now <= s.mtime + timeout
-          # delete timeout cache
-          File.delete(path)
-        end
+      return unless block_given?
 
-        data = yield
-        File.open(path, 'w') do |f|
-          f.write(data.to_json)
-        end if path && data
+      delete(path) if force
 
-        return data
+      data = read(type, key, timeout: timeout)
+      return data if data
+
+      data = yield
+      write(type, key, data)
+
+      data
+    end
+
+    def delete(path)
+      File.delete(path)
+    end
+
+    def read(type, key, timeout: nil)
+      path = target_path(type, key)
+      if path && File.exist?(path)
+        s = File::Stat.new(path)
+        return JSON.load(File.read(path)) if Time.now <= s.mtime + timeout
+        # delete timeout cache
+        delete(path)
+      end
+      nil
+    end
+
+    def write(type, key, data)
+      return if data.nil?
+      path = target_path(type, key)
+      File.open(path, 'w') do |f|
+        data = data.to_json unless data.is_a?(String)
+        f.write(data.to_json)
       end
     end
+
+    private
 
     def topdir
       dir = Pathname(Dir.home).join('.cache/rmisskey')
@@ -29,11 +49,10 @@ class Mcache
       return dir
     end
 
-    def user_path(name = nil)
-      dir = topdir.join('user')
+    def target_path(dir, filename)
+      dir = topdir.join(dir)
       FileUtils.mkdir_p(dir)
-      return unless name
-      dir.join(name)
+      dir.join(filename)
     end
   end
 end
