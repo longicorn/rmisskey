@@ -6,6 +6,7 @@ opt = OptionParser.new
 options = {}
 opt.on('-i', '--info') {options[:info] = true }
 opt.on('-p', '--post') {options[:post] = true }
+opt.on('-s', '--secret') {options[:secret] = true }
 opt.on('-r', '--reply NoteID', String) {|v| options[:reply] = true; options[:reply_id] = v }
 opt.on('-f', '--file FILE', String) {|v| options[:file] = v }
 opt.on('-t', '--timeline') {|v| options[:hometimeline] = true }
@@ -114,10 +115,15 @@ def execute(misskey, options)
       text = text.chomp
 
       ret = nil
+      visibility = nil
+      if options[:secret]
+        visible_user_ids = [misskey.i['id']]
+        visibility = 'specified'
+      end
       if options[:reply]
-        ret = misskey.note_create(text, reply_id: options[:reply_id])
+        ret = misskey.note_create(text, reply_id: options[:reply_id], visibility: visibility, visible_user_ids: visible_user_ids)
       else
-        ret = misskey.note_create(text)
+        ret = misskey.note_create(text, visibility: visibility, visible_user_ids: visible_user_ids)
       end
       unless ret
         puts 'Post failed'

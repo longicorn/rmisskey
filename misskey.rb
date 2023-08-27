@@ -49,8 +49,8 @@ class Misskey
     end
   end
 
-  def note_create(text, reply_id: nil)
-    params = {text: text, replyId: reply_id}
+  def note_create(text, reply_id: nil, visibility: nil, visible_user_ids: nil)
+    params = {text: text, replyId: reply_id, visibility: visibility, visibleUserIds: visible_user_ids}
     status, res = api('notes/create', params)
     if status
       return res
